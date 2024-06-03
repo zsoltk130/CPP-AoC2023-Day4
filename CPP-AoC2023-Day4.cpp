@@ -7,6 +7,7 @@
 #include <vector>
 #include <fstream>
 #include <regex>
+#include <algorithm>
 
 struct Card
 {
@@ -33,6 +34,15 @@ std::vector<std::string> readLinesFromFile(const std::string& filename) {
     return lines;
 }
 
+// Take input vector of strings containing lines with a card, sequence of owned and sequence of winning numbers
+// and use regex to find all numbers and the character '|'.
+//
+// First number found is always the card number.
+// Everything after card number and '|' are winning numbers.
+// Everything after '|' and end of line are owned numbers.
+//
+// Separate card number, winning numbers and owned numbers using the Card struct.
+// Add each card with separated card number, winning numbers and owned numbers back into a vector of cards.
 std::vector<Card> findNumbers(const std::vector<std::string>& input)
 {
     std::regex numberPattern("\\d+|[|]");
@@ -80,11 +90,57 @@ std::vector<Card> findNumbers(const std::vector<std::string>& input)
     return cards;
 }
 
+// For each card, loop through all owned numbers one by one and check if it's among the winning numbers.
+//
+// First match results in 1 point.
+// Subsequent matches double the gained points.
+int findPointsFromWinningNumbers(Card card)
+{
+    int points = 0;
+
+    std::vector<int> winningNumbers = card.winningNumbers;
+    std::vector<int> ownedNumbers = card.ownedNumbers;
+
+    for (int ownedNumber : ownedNumbers)
+    {
+        if (std::find(winningNumbers.begin(), winningNumbers.end(), ownedNumber) != winningNumbers.end())
+        {
+            if (points == 0)
+            {
+                points = 1;
+            }
+            else
+            {
+                points *= 2;
+            }
+        }
+    }
+
+    return points;
+}
+
+// Loop through vector of cards, card by card, and call findPointsFromWinningNumbers() on each card
+// to retrieve the winning points from that card.
+//
+// Add all points together into total and return.
+int findTotalPointsFromCards(std::vector<Card>& cards)
+{
+    int total = 0;
+
+    for (Card card : cards)
+    {
+        total += findPointsFromWinningNumbers(card);
+    }
+
+    return total;
+}
+
 int main()
 {
     std::string filename = "aoc_d4.txt";
     std::vector<std::string> input = readLinesFromFile(filename);
     std::vector<Card> cards = findNumbers(input);
-	std::cout << "Hello CMake." << std::endl;
+    int total = findTotalPointsFromCards(cards);
+    std::cout << "Total: " << total << std::endl;
 	return 0;
 }
