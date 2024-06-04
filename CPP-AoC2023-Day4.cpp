@@ -14,6 +14,8 @@ struct Card
     int cardNumber;
     std::vector<int> winningNumbers;
     std::vector<int> ownedNumbers;
+    int matches = 0;
+    int instances = 1;
 };
 
 std::vector<std::string> readLinesFromFile(const std::string& filename) {
@@ -135,12 +137,92 @@ int findTotalPointsFromCards(std::vector<Card>& cards)
     return total;
 }
 
+int findMatchingNumbers(Card card)
+{
+    int matches = 0;
+
+    std::vector<int> winningNumbers = card.winningNumbers;
+    std::vector<int> ownedNumbers = card.ownedNumbers;
+
+    for (int ownedNumber : ownedNumbers)
+    {
+        if (std::find(winningNumbers.begin(), winningNumbers.end(), ownedNumber) != winningNumbers.end())
+        {
+            matches++;
+        }
+    }
+
+    return matches;
+}
+
+void findAllMatchingNumbers(std::vector<Card>& cards)
+{
+    for (Card& card : cards)
+    {
+        card.matches = findMatchingNumbers(card);
+    }
+}
+
+void findCardInstances(Card card, std::vector<Card>& cards)
+{
+    int matches = card.matches;
+    int nextCardNumber = card.cardNumber;
+    int maxCardNumber = nextCardNumber + matches;
+    int currentCardInstances = card.instances;
+    
+    for (; nextCardNumber < maxCardNumber; nextCardNumber++)
+    {
+        cards[nextCardNumber].instances += 1 * currentCardInstances;
+    }
+
+}
+
+void findAllInstances(std::vector<Card>& cards)
+{
+    for (Card& card : cards)
+    {
+        int matches = card.matches;
+
+        if (matches > 0)
+        {
+            findCardInstances(card, cards);
+        }
+    }
+}
+
+int countInstances(std::vector<Card>& cards)
+{
+    int total = 0;
+
+    for (Card card : cards)
+    {
+        total += card.instances;
+    }
+
+    return total;
+}
+
+void runPartOne(std::vector<Card>& cards)
+{
+    int total = findTotalPointsFromCards(cards);
+    std::cout << "Part 1 Total: " << total << std::endl;
+}
+
+void runPartTwo(std::vector<Card>& cards)
+{
+    findAllMatchingNumbers(cards);
+    findAllInstances(cards);
+    int total = countInstances(cards);
+    std::cout << "Part 2 Total: " << total << std::endl;
+}
+
 int main()
 {
     std::string filename = "aoc_d4.txt";
     std::vector<std::string> input = readLinesFromFile(filename);
     std::vector<Card> cards = findNumbers(input);
-    int total = findTotalPointsFromCards(cards);
-    std::cout << "Total: " << total << std::endl;
+    
+    runPartOne(cards);
+    runPartTwo(cards);
 	return 0;
 }
